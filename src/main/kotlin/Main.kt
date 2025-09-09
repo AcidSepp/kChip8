@@ -10,22 +10,22 @@ import kotlin.math.pow
  */
 class Chip8(var instructions: UShortArray) {
 
-    private var programmCounter = 0
+    private var programmCounter: UShort = 0.toUShort()
 
-    private val memory = ByteArray(2 pow 16)
-    private val registers = ByteArray(16)
-    private var addressRegister:  Short = 0
+    public val memory = UByteArray(2 pow 16)
+    public val registers = UByteArray(16)
+    public var addressRegister: Short = 0
 
-    private var stack = ByteArray(2 pow 8)
-    private val stackPointer: Byte = 0
+    public var stack = ByteArray(2 pow 8)
+    public val stackPointer: Byte = 0
 
     fun next() {
-        val op = instructions[programmCounter]
+        val op = instructions[programmCounter.toInt()]
 
         val nnn = op mask 0x0FFF
         val nn = op.rightByte()
         val x = (op mask 0x0F00).leftByte()
-        val y = (op mask 0x00F0).rightByte()
+        val y = ((op mask 0x00F0) shr 4) .toUByte()
 
         if (op mask 0xFF00 == 0x0000.toUShort()) {
             if (op mask 0xFF00 == 0x0000.toUShort()) {
@@ -66,10 +66,6 @@ class Chip8(var instructions: UShortArray) {
 
         if (op mask 0xF000 == 0x7000.toUShort()) {
             op7XNN(x, nn)
-        }
-
-        if (op mask 0xF00F == 0x8000.toUShort()) {
-            op5XY0(x, y)
         }
 
         if (op mask 0xF00F == 0x8000.toUShort()) {
@@ -221,60 +217,123 @@ class Chip8(var instructions: UShortArray) {
         TODO("Not yet implemented")
     }
 
+    /**
+     * Calls machine code routine (RCA 1802 for COSMAC VIP) at address NNN.
+     * Not necessary for most ROMs.
+     */
     fun op0NNN(nnn: UShort) {
 
     }
 
+    /**
+     * Clears the screen.
+     */
     fun op00E0() {
 
     }
 
+    /**
+     * Returns from a subroutine.
+     */
     fun op00EE() {
 
     }
 
+    /**
+     * Jumps to address NNN.
+     */
     fun op1NNN(nnn: UShort) {
-
+        programmCounter = nnn
     }
 
+    /**
+     * Calls subroutine at NNN.
+     */
     fun op2NNN(nnn: UShort) {
-
+        programmCounter = nnn
+        TODO()
     }
 
+    /**
+     * Skips the next instruction if VX equals NN (usually the next instruction
+     * is a jump to skip a code block).
+     */
     fun op3XNN(x: UByte, nn: UByte) {
-
+        if (registers[x] == nn) {
+            programmCounter++
+        }
+        programmCounter++
     }
 
+    /**
+     * Skips the next instruction if VX does not equal NN
+     * (usually the next instruction is a jump to skip a code block).
+     */
     fun op4XNN(x: UByte, nn: UByte) {
-
+        if (registers[x] != nn) {
+            programmCounter++
+        }
+        programmCounter++
     }
 
+    /**
+     * Skips the next instruction if VX equals VY
+     * (usually the next instruction is a jump to skip a code block).
+     */
     fun op5XY0(x: UByte, y: UByte) {
-
+        if (registers[x] == registers[y]) {
+            programmCounter++
+        }
+        programmCounter++
     }
 
+    /**
+     * Sets VX to NN.
+     */
     fun op6XNN(x: UByte, nn: UByte) {
-
+        registers[x] = nn
+        programmCounter++
     }
 
+    /**
+     * Adds NN to VX (carry flag is not changed).
+     */
     fun op7XNN(x: UByte, nn: UByte) {
-
+        val i = (registers[x] + nn).toUByte()
+        registers[x] = i
+        programmCounter++
     }
 
+    /**
+     * Sets VX to the value of VY.
+     */
     fun op8XY0(x: UByte, y: UByte) {
-
+        registers[x] = registers[y]
+        programmCounter++
     }
 
+    /**
+     * Sets VX to VX or VY. (bitwise OR operation)
+     */
     fun op8XY1(x: UByte, y: UByte) {
-
+        registers[x] = registers[x] or registers[y]
+        programmCounter++
     }
 
+    /**
+     * Sets VX to VX and VY. (bitwise AND operation).
+     */
     fun op8XY2(x: UByte, y: UByte) {
-
+        registers[x] = registers[x] and registers[y]
+        programmCounter++
     }
 
+    /**
+     * Sets VX to VX xor VY.
+     */
     fun op8XY3(x: UByte, y: UByte) {
-
+        registers[x] = registers[x] xor registers[y]
+        programmCounter++
     }
 
     fun op8XY4(x: UByte, y: UByte) {
@@ -321,3 +380,17 @@ infix fun UShort.mask(mask: Int) = this.and(mask.toUShort())
 fun UShort.leftByte() = (this.toUInt() shr 8).toUByte()
 
 fun UShort.rightByte() = this.toUByte()
+
+infix fun UShort.shr(shift: Int) = (this.toUInt() shr shift).toUShort()
+
+infix fun UShort.shl(shift: Int) = (this.toUInt() shl shift).toUShort()
+
+infix fun UByte.shr(shift: Int) = (this.toUInt() shr shift).toUByte()
+
+infix fun UByte.shl(shift: Int) = (this.toUInt() shl shift).toUByte()
+
+operator fun UByteArray.get(index: UByte) = this[index.toInt()]
+
+operator fun UByteArray.set(index: UByte, value: UByte) {
+    this[index.toInt()] = value
+}
