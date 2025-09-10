@@ -7,17 +7,25 @@ import kotlin.math.pow
 
 /**
  * see https://en.wikipedia.org/wiki/CHIP-8
+ * sse https://chip8.gulrak.net/
  */
 class Chip8(var instructions: UShortArray) {
 
     private var programmCounter: UShort = 0.toUShort()
 
-    public val memory = UByteArray(2 pow 16)
-    public val registers = UByteArray(16)
-    public var addressRegister: Short = 0
+    private val memory = UByteArray(2 pow 16)
+    val registers = UByteArray(16)
 
-    public var stack = ByteArray(2 pow 8)
-    public val stackPointer: Byte = 0
+    var vf: UByte
+        get() = registers[0xF]
+        set(value) {
+            registers[0xF] = value
+        }
+
+    private var addressRegister: Short = 0
+
+    private var stack = ByteArray(2 pow 8)
+    private val stackPointer: Byte = 0
 
     fun next() {
         val op = instructions[programmCounter.toInt()]
@@ -336,12 +344,32 @@ class Chip8(var instructions: UShortArray) {
         programmCounter++
     }
 
+    /**
+     * add vY to vX, vF is set to 1 if an overflow happened, to 0 if not, even if X=F!
+     */
     fun op8XY4(x: UByte, y: UByte) {
-
+        val result = registers[x].toUInt() + registers[y].toUInt()
+        registers[x] = result.toUByte()
+        vf = if (result > UByte.MAX_VALUE) {
+            0x1u
+        } else {
+            0x0u
+        }
+        programmCounter++
     }
 
+    /**
+     * subtract vY from vX, vF is set to 0 if an underflow happened, to 1 if not, even if X=F!
+     */
     fun op8XY5(x: UByte, y: UByte) {
-
+        val result = registers[x].toInt() - registers[y].toInt()
+        registers[x] = result.toUByte()
+        vf = if (result < 0) {
+            0x1u
+        } else {
+            0x0u
+        }
+        programmCounter++
     }
 
     fun op8XY6(x: UByte, y: UByte) {

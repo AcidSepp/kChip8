@@ -95,4 +95,164 @@ class Test {
         assertThat(chip8.registers[0x2]).isEqualTo(0x3C.toUByte())
         assertThat(chip8.registers[0x3]).isEqualTo(0x4D.toUByte())
     }
+
+    @Test
+    fun op8XY2() {
+        val rom = ushortArrayOf(0x80A2u, 0x81B2u, 0x82C2u, 0x83D2u)
+        val chip8 = Chip8(rom)
+
+        chip8.registers[0xA] = 0x1Au
+        chip8.registers[0xB] = 0x2Bu
+        chip8.registers[0xC] = 0x3Cu
+        chip8.registers[0xD] = 0x4Du
+
+        chip8.registers[0x0] = 0xFFu
+        chip8.registers[0x1] = 0xFFu
+        chip8.registers[0x2] = 0xFFu
+        chip8.registers[0x3] = 0xFFu
+
+        chip8.next()
+        chip8.next()
+        chip8.next()
+        chip8.next()
+
+        assertThat(chip8.registers[0x0]).isEqualTo(0x1A.toUByte())
+        assertThat(chip8.registers[0x1]).isEqualTo(0x2B.toUByte())
+        assertThat(chip8.registers[0x2]).isEqualTo(0x3C.toUByte())
+        assertThat(chip8.registers[0x3]).isEqualTo(0x4D.toUByte())
+    }
+
+    @Test
+    fun op8XY3() {
+        val rom = ushortArrayOf(0x80A3u, 0x81B3u, 0x82C3u, 0x83D3u)
+        val chip8 = Chip8(rom)
+
+        chip8.registers[0xA] = 0x0Fu
+        chip8.registers[0xB] = 0xFFu
+        chip8.registers[0xC] = 0x0Fu
+        chip8.registers[0xD] = 0xFFu
+
+        chip8.registers[0x0] = 0x00u
+        chip8.registers[0x1] = 0x00u
+        chip8.registers[0x2] = 0xFFu
+        chip8.registers[0x3] = 0xFFu
+
+        chip8.next()
+        chip8.next()
+        chip8.next()
+        chip8.next()
+
+        assertThat(chip8.registers[0x0]).isEqualTo(0x0F.toUByte())
+        assertThat(chip8.registers[0x1]).isEqualTo(0xFF.toUByte())
+        assertThat(chip8.registers[0x2]).isEqualTo(0xF0.toUByte())
+        assertThat(chip8.registers[0x3]).isEqualTo(0x00.toUByte())
+    }
+
+    @Test
+    fun op8XY4_noOverflow_vfNotSet() {
+        val rom = ushortArrayOf(0x8014u)
+        val chip8 = Chip8(rom)
+
+        chip8.registers[0x0] = 2u
+        chip8.registers[0x1] = 3u
+
+        chip8.next()
+
+        assertThat(chip8.registers[0x0]).isEqualTo(5u.toUByte())
+        assertThat(chip8.vf).isEqualTo(0x0u.toUByte())
+    }
+
+    @Test
+    fun op8XY4_overflow_vfSet() {
+        val rom = ushortArrayOf(0x8014u)
+        val chip8 = Chip8(rom)
+
+        chip8.registers[0x0] = 0xFFu
+        chip8.registers[0x1] = 0xFFu
+
+        chip8.next()
+
+        assertThat(chip8.registers[0x0]).isEqualTo(0xFEu.toUByte())
+        assertThat(chip8.vf).isEqualTo(0x1u.toUByte())
+    }
+
+    @Test
+    fun op8XY4_xIsVf_noOverflow_vfSetTo0() {
+        val rom = ushortArrayOf(0x8F14u)
+        val chip8 = Chip8(rom)
+
+        chip8.vf = 1u
+        chip8.registers[0x1] = 2u
+
+        chip8.next()
+
+        assertThat(chip8.vf).isEqualTo(0x00.toUByte())
+    }
+
+    @Test
+    fun op8XY4_xIsVf_overflow_vfSetTo1() {
+        val rom = ushortArrayOf(0x8F14u)
+        val chip8 = Chip8(rom)
+
+        chip8.vf = 1u
+        chip8.registers[0x1] = 0xFFu
+
+        chip8.next()
+
+        assertThat(chip8.vf).isEqualTo(0x01.toUByte())
+    }
+
+    @Test
+    fun op8XY5_noUnderflow_vfSetTo0() {
+        val rom = ushortArrayOf(0x8015u)
+        val chip8 = Chip8(rom)
+
+        chip8.registers[0x0] = 3u
+        chip8.registers[0x1] = 2u
+
+        chip8.next()
+
+        assertThat(chip8.registers[0x0]).isEqualTo(1u.toUByte())
+        assertThat(chip8.vf).isEqualTo(0x0u.toUByte())
+    }
+
+    @Test
+    fun op8XY5_underflow_vfSetTo1() {
+        val rom = ushortArrayOf(0x8015u)
+        val chip8 = Chip8(rom)
+
+        chip8.registers[0x0] = 2u
+        chip8.registers[0x1] = 3u
+
+        chip8.next()
+
+        assertThat(chip8.registers[0x0]).isEqualTo(0xFFu.toUByte())
+        assertThat(chip8.vf).isEqualTo(0x1u.toUByte())
+    }
+
+    @Test
+    fun op8XY5_xIsVf_noUnderflow_vfSetTo0() {
+        val rom = ushortArrayOf(0x8F15u)
+        val chip8 = Chip8(rom)
+
+        chip8.vf = 3u
+        chip8.registers[0x1] = 1u
+
+        chip8.next()
+
+        assertThat(chip8.vf).isEqualTo(0x0u.toUByte())
+    }
+
+    @Test
+    fun op8XY5_xIsVf_underflow_vfSetTo1() {
+        val rom = ushortArrayOf(0x8F15u)
+        val chip8 = Chip8(rom)
+
+        chip8.vf = 0u
+        chip8.registers[0x1] = 0xFFu
+
+        chip8.next()
+
+        assertThat(chip8.vf).isEqualTo(0x1u.toUByte())
+    }
 }
