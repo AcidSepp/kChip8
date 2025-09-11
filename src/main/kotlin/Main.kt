@@ -372,16 +372,41 @@ class Chip8(var instructions: UShortArray) {
         programmCounter++
     }
 
+    /**
+     * set vX to vY and shift vX one bit to the right,
+     * set vF to the bit shifted out, even if X=F!
+     */
     fun op8XY6(x: UByte, y: UByte) {
-
+        val rightMostBit = registers[y].mask(0b0000_0001)
+        registers[x] = registers[y].shr(1)
+        vf = rightMostBit
+        programmCounter++
     }
 
+    /**
+     * set vX to the result of subtracting vX from vY,
+     * vF is set to 0 if an underflow happened, to 1 if not, even if X=F!
+     */
     fun op8XY7(x: UByte, y: UByte) {
-
+        val result = registers[y].toInt() - registers[x].toInt()
+        registers[x] = result.toUByte()
+        vf = if (result < 0) {
+            0x1u
+        } else {
+            0x0u
+        }
+        programmCounter++
     }
 
+    /**
+     * 	set vX to vY and shift vX one bit to the left,
+     * 	set vF to the bit shifted out, even if X=F!
+     */
     fun op8XYE(x: UByte, y: UByte) {
-
+        val leftmostBit = registers[y].mask(0b1000_0000).shr(7)
+        registers[x] = registers[y].shl(1)
+        vf = leftmostBit
+        programmCounter++
     }
 
     fun op9XY0(x: UByte, y: UByte) {
@@ -404,6 +429,8 @@ class Chip8(var instructions: UShortArray) {
 infix fun Int.pow(exponent: Int) = this.toDouble().pow(exponent).toInt()
 
 infix fun UShort.mask(mask: Int) = this.and(mask.toUShort())
+
+infix fun UByte.mask(mask: Int) = this.and(mask.toUByte())
 
 fun UShort.leftByte() = (this.toUInt() shr 8).toUByte()
 
