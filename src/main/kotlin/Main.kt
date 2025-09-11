@@ -9,11 +9,18 @@ import kotlin.math.pow
  * see https://en.wikipedia.org/wiki/CHIP-8
  * sse https://chip8.gulrak.net/
  */
-class Chip8(var instructions: UShortArray) {
+class Chip8(instructions: UShortArray) {
+
+    val memory = UByteArray(2 pow 16)
+    init {
+        instructions.forEachIndexed { index, it ->
+            memory[index * 2] = it.leftByte()
+            memory[index * 2 + 1] = it.rightByte()
+        }
+    }
 
     private var programmCounter: UShort = 0.toUShort()
 
-    private val memory = UByteArray(2 pow 16)
     val registers = UByteArray(16)
 
     var vf: UByte
@@ -22,13 +29,16 @@ class Chip8(var instructions: UShortArray) {
             registers[0xF] = value
         }
 
-    private var addressRegister: Short = 0
+    var addressRegister: UShort = 0u
+        private set
 
     private var stack = ByteArray(2 pow 8)
     private val stackPointer: Byte = 0
 
     fun next() {
-        val op = instructions[programmCounter.toInt()]
+        val op = getNextOp()
+
+        println(op.toHexString())
 
         val nnn = op mask 0x0FFF
         val nn = op.rightByte()
@@ -268,9 +278,9 @@ class Chip8(var instructions: UShortArray) {
      */
     fun op3XNN(x: UByte, nn: UByte) {
         if (registers[x] == nn) {
-            programmCounter++
+            incrementProgrammCounter()
         }
-        programmCounter++
+        incrementProgrammCounter()
     }
 
     /**
@@ -279,9 +289,9 @@ class Chip8(var instructions: UShortArray) {
      */
     fun op4XNN(x: UByte, nn: UByte) {
         if (registers[x] != nn) {
-            programmCounter++
+            incrementProgrammCounter()
         }
-        programmCounter++
+        incrementProgrammCounter()
     }
 
     /**
@@ -290,9 +300,9 @@ class Chip8(var instructions: UShortArray) {
      */
     fun op5XY0(x: UByte, y: UByte) {
         if (registers[x] == registers[y]) {
-            programmCounter++
+            incrementProgrammCounter()
         }
-        programmCounter++
+        incrementProgrammCounter()
     }
 
     /**
@@ -300,7 +310,7 @@ class Chip8(var instructions: UShortArray) {
      */
     fun op6XNN(x: UByte, nn: UByte) {
         registers[x] = nn
-        programmCounter++
+        incrementProgrammCounter()
     }
 
     /**
@@ -309,7 +319,7 @@ class Chip8(var instructions: UShortArray) {
     fun op7XNN(x: UByte, nn: UByte) {
         val i = (registers[x] + nn).toUByte()
         registers[x] = i
-        programmCounter++
+        incrementProgrammCounter()
     }
 
     /**
@@ -317,7 +327,7 @@ class Chip8(var instructions: UShortArray) {
      */
     fun op8XY0(x: UByte, y: UByte) {
         registers[x] = registers[y]
-        programmCounter++
+        incrementProgrammCounter()
     }
 
     /**
@@ -325,7 +335,7 @@ class Chip8(var instructions: UShortArray) {
      */
     fun op8XY1(x: UByte, y: UByte) {
         registers[x] = registers[x] or registers[y]
-        programmCounter++
+        incrementProgrammCounter()
     }
 
     /**
@@ -333,7 +343,7 @@ class Chip8(var instructions: UShortArray) {
      */
     fun op8XY2(x: UByte, y: UByte) {
         registers[x] = registers[x] and registers[y]
-        programmCounter++
+        incrementProgrammCounter()
     }
 
     /**
@@ -341,7 +351,7 @@ class Chip8(var instructions: UShortArray) {
      */
     fun op8XY3(x: UByte, y: UByte) {
         registers[x] = registers[x] xor registers[y]
-        programmCounter++
+        incrementProgrammCounter()
     }
 
     /**
@@ -355,7 +365,7 @@ class Chip8(var instructions: UShortArray) {
         } else {
             0x0u
         }
-        programmCounter++
+        incrementProgrammCounter()
     }
 
     /**
@@ -369,7 +379,7 @@ class Chip8(var instructions: UShortArray) {
         } else {
             0x0u
         }
-        programmCounter++
+        incrementProgrammCounter()
     }
 
     /**
@@ -380,7 +390,7 @@ class Chip8(var instructions: UShortArray) {
         val rightMostBit = registers[y].mask(0b0000_0001)
         registers[x] = registers[y].shr(1)
         vf = rightMostBit
-        programmCounter++
+        incrementProgrammCounter()
     }
 
     /**
@@ -395,7 +405,7 @@ class Chip8(var instructions: UShortArray) {
         } else {
             0x0u
         }
-        programmCounter++
+        incrementProgrammCounter()
     }
 
     /**
@@ -406,7 +416,7 @@ class Chip8(var instructions: UShortArray) {
         val leftmostBit = registers[y].mask(0b1000_0000).shr(7)
         registers[x] = registers[y].shl(1)
         vf = leftmostBit
-        programmCounter++
+        incrementProgrammCounter()
     }
 
     /**
@@ -414,21 +424,35 @@ class Chip8(var instructions: UShortArray) {
      */
     fun op9XY0(x: UByte, y: UByte) {
         if (registers[x] != registers[y]) {
-            programmCounter++
+            incrementProgrammCounter()
         }
-        programmCounter++
+        incrementProgrammCounter()
     }
 
+    /**
+     * set I to NNN
+     */
     fun opANNN(nnn: UShort) {
-
+        addressRegister = memory[nnn.toInt()].toUShort()
+        incrementProgrammCounter()
     }
 
+    /**
+     * jump to address NNN + v0
+     */
     fun opBNNN(nnn: UShort) {
-
+        programmCounter = (nnn + registers[0x0]).toUShort()
     }
 
     fun opCXNN(x: UByte, nn: UByte) {
 
+    }
+
+    private fun getNextOp() = memory[programmCounter.toInt()] combine memory[programmCounter.toInt() + 1]
+
+    private fun incrementProgrammCounter() {
+        programmCounter++
+        programmCounter++
     }
 }
 

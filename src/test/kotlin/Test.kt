@@ -453,4 +453,35 @@ class Test {
 
         assertThat(chip8.registers[0x1]).isEqualTo(0xFEu.toUByte())
     }
+
+    @Test
+    fun op_ANNN() {
+        val rom = ushortArrayOf(
+            0xAAFEu,
+        )
+        val chip8 = Chip8(rom)
+        chip8.memory[0xAFE] = 0xFEu
+        chip8.next()
+
+        assertThat(chip8.addressRegister).isEqualTo(0x0FEu.toUShort())
+    }
+
+    @Test
+    fun op_BNNN() {
+        val rom = ushortArrayOf(
+            0xB100u,
+        )
+        val chip8 = Chip8(rom)
+
+        chip8.registers[0] = 0x2u
+
+        // 6AF0 set registers[0xA] to F0
+        chip8.memory[0x102] = 0x6Au
+        chip8.memory[0x103] = 0xF0u
+
+        chip8.next() // jump to 102
+        chip8.next() // execute 102
+
+        assertThat(chip8.registers[0xA]).isEqualTo(0xF0.toUByte())
+    }
 }
