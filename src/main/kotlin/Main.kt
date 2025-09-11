@@ -409,8 +409,14 @@ class Chip8(var instructions: UShortArray) {
         programmCounter++
     }
 
+    /**
+     * skip next opcode if vX != vY
+     */
     fun op9XY0(x: UByte, y: UByte) {
-
+        if (registers[x] != registers[y]) {
+            programmCounter++
+        }
+        programmCounter++
     }
 
     fun opANNN(nnn: UShort) {

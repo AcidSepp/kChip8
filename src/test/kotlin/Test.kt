@@ -417,4 +417,40 @@ class Test {
 
         assertThat(chip8.vf).isEqualTo(0x1u.toUByte())
     }
+
+    @Test
+    fun op9XY0_xEqualsY_nextInstructionNotSkipped() {
+        val rom = ushortArrayOf(
+            0x9010u, // skip next instruction if vX!=vY
+            0x61AFu, // v1=AF
+            0x61FEu // v1=FE
+        )
+        val chip8 = Chip8(rom)
+
+        chip8.registers[0x0] = 0xFEu
+        chip8.registers[0x1] = 0xFEu
+
+        chip8.next()
+        chip8.next()
+
+        assertThat(chip8.registers[0x1]).isEqualTo(0xAFu.toUByte())
+    }
+
+    @Test
+    fun op9XY0_xNotEqualsY_nextInstructionNotSkipped() {
+        val rom = ushortArrayOf(
+            0x9010u, // skip next instruction if vX!=vY
+            0x61AFu, // v1=AF
+            0x61FEu // v1=FE
+        )
+        val chip8 = Chip8(rom)
+
+        chip8.registers[0x0] = 0xAFu
+        chip8.registers[0x1] = 0xFEu
+
+        chip8.next()
+        chip8.next()
+
+        assertThat(chip8.registers[0x1]).isEqualTo(0xFEu.toUByte())
+    }
 }
