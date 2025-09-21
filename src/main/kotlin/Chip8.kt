@@ -25,8 +25,8 @@ class Chip8(
             memory[index * 2] = it.leftByte()
             memory[index * 2 + 1] = it.rightByte()
         }
-        display = Array(screenWidth, {
-            BooleanArray(screenHeight, { false })
+        display = Array(screenHeight, {
+            BooleanArray(screenWidth, { false })
         })
     }
 
@@ -444,11 +444,14 @@ class Chip8(
                 val xTarget = x + xOffset.toInt()
                 if (xTarget in 0..<screenWidth && yTarget in 0 ..< screenHeight) {
                     val previousPixelState = display[yTarget][xTarget]
-                    val newPixelState = row.bitAt(x)
-                    if (previousPixelState != newPixelState) {
-                        vf = 0x1u
+                    if (row.bitAt(x)) {
+                        if (previousPixelState) {
+                            display[yTarget][xTarget] = false
+                            vf = 0x1u
+                        } else {
+                            display[yTarget][xTarget] = true
+                        }
                     }
-                    display[yTarget][xTarget] = newPixelState
                 }
             }
         }

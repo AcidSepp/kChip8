@@ -506,28 +506,56 @@ class Test {
     }
 
     @Test
-    fun op_DXYN_draw1Row() {
+    fun op_DXYN_draw1Row_vfNotSet() {
         val rom = ushortArrayOf(
             0xD111u,
         )
-        val chip8 = Chip8(rom)
+        val chip8 = Chip8(rom, screenWidth = 5, screenHeight = 7)
         chip8.registers[0x1] = 0u // x and y offsets are 0
         chip8.addressRegister = 0xFu
         chip8.memory[0xF] = 0xFFu
 
         val expectedScreen = """
-            XXXXXXXX
-            ........
-            ........
-            ........
-            ........
-            ........
-            ........
-            ........
+            XXXXX
+            .....
+            .....
+            .....
+            .....
+            .....
+            .....
         """.trimIndent()
 
         chip8.next()
 
         assertThat(chip8.getScreen()).isEqualTo(expectedScreen)
+        assertThat(chip8.vf).isEqualTo(0x0u.toUByte())
+    }
+
+    @Test
+    fun op_DXYN_erase1Row_vfSet() {
+        val rom = ushortArrayOf(
+            0xD111u,
+            0xD111u,
+        )
+        val chip8 = Chip8(rom, screenWidth = 5, screenHeight = 7)
+        chip8.registers[0x1] = 0u // x and y offsets are 0
+        chip8.addressRegister = 0xFu
+        chip8.memory[0xF] = 0xFFu
+
+        val expectedScreen = """
+            .....
+            .....
+            .....
+            .....
+            .....
+            .....
+            .....
+        """.trimIndent()
+
+        chip8.next()
+        chip8.next()
+
+        assertThat(chip8.getScreen()).isEqualTo(expectedScreen)
+        assertThat(chip8.vf).isEqualTo(0x1u.toUByte())
     }
 }
