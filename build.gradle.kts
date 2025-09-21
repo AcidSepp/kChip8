@@ -12,6 +12,7 @@ repositories {
 dependencies {
     testImplementation(libs.assertj)
     testImplementation(libs.mockito)
+    testImplementation(libs.mockito.kotlin)
 }
 
 testing.suites.named<JvmTestSuite>("test") {

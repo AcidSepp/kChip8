@@ -4,12 +4,14 @@ package de.haw.landshut
 
 import kotlin.experimental.and
 import kotlin.math.pow
+import kotlin.random.Random
+import kotlin.random.nextUBytes
 
 /**
  * see https://en.wikipedia.org/wiki/CHIP-8
  * sse https://chip8.gulrak.net/
  */
-class Chip8(instructions: UShortArray) {
+class Chip8(instructions: UShortArray, val random: Random = Random.Default) {
 
     val memory = UByteArray(2 pow 16)
     init {
@@ -444,8 +446,12 @@ class Chip8(instructions: UShortArray) {
         programmCounter = (nnn + registers[0x0]).toUShort()
     }
 
+    /**
+     * set vx to a random value masked (bitwise AND) with NN
+     */
     fun opCXNN(x: UByte, nn: UByte) {
-
+        registers[x] = random.nextUBytes(1).first() and nn
+        incrementProgrammCounter()
     }
 
     private fun getNextOp() = memory[programmCounter.toInt()] combine memory[programmCounter.toInt() + 1]

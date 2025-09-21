@@ -2,6 +2,11 @@ import de.haw.landshut.Chip8
 import de.haw.landshut.mask
 import org.junit.jupiter.api.Test
 import org.assertj.core.api.Assertions.*;
+import org.mockito.kotlin.any
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.mock
+import kotlin.random.Random
+import kotlin.random.nextUBytes
 
 @OptIn(ExperimentalUnsignedTypes::class)
 class Test {
@@ -483,5 +488,20 @@ class Test {
         chip8.next() // execute 102
 
         assertThat(chip8.registers[0xA]).isEqualTo(0xF0.toUByte())
+    }
+
+    @Test
+    fun op_CXNN() {
+        val rom = ushortArrayOf(
+            0xC00Fu,
+        )
+        val random = mock<Random> {
+            onGeneric { nextUBytes(any<Int>()) } doReturn ubyteArrayOf(0xFAu)
+        }
+        val chip8 = Chip8(rom, random)
+
+        chip8.next()
+
+        assertThat(chip8.registers[0x0]).isEqualTo(0x0A.toUByte())
     }
 }
