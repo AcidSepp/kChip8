@@ -2,7 +2,6 @@
 
 package de.haw.landshut
 
-import kotlin.experimental.and
 import kotlin.math.pow
 import kotlin.random.Random
 import kotlin.random.nextUBytes
