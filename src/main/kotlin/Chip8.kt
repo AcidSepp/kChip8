@@ -10,14 +10,24 @@ import kotlin.random.nextUBytes
  * see https://en.wikipedia.org/wiki/CHIP-8
  * sse https://chip8.gulrak.net/
  */
-class Chip8(instructions: UShortArray, val random: Random = Random.Default) {
+class Chip8(
+    instructions: UShortArray,
+    val random: Random = Random.Default,
+    val screenWidth: Int = 8,
+    val screenHeight: Int = 8,
+) {
 
+    val display: Array<BooleanArray>
     val memory = UByteArray(2 pow 16)
+
     init {
         instructions.forEachIndexed { index, it ->
             memory[index * 2] = it.leftByte()
             memory[index * 2 + 1] = it.rightByte()
         }
+        display = Array(screenWidth, {
+            BooleanArray(screenHeight, { false })
+        })
     }
 
     private var programmCounter: UShort = 0.toUShort()
@@ -31,7 +41,6 @@ class Chip8(instructions: UShortArray, val random: Random = Random.Default) {
         }
 
     var addressRegister: UShort = 0u
-        private set
 
     private var stack = ByteArray(2 pow 8)
     private val stackPointer: Byte = 0
@@ -43,8 +52,9 @@ class Chip8(instructions: UShortArray, val random: Random = Random.Default) {
 
         val nnn = op mask 0x0FFF
         val nn = op.rightByte()
+        val n = (op mask 0x000F).toUByte()
         val x = (op mask 0x0F00).leftByte()
-        val y = ((op mask 0x00F0) shr 4) .toUByte()
+        val y = ((op mask 0x00F0) shr 4).toUByte()
 
         if (op mask 0xFF00 == 0x0000.toUShort()) {
             if (op mask 0xFF00 == 0x0000.toUShort()) {
@@ -140,7 +150,11 @@ class Chip8(instructions: UShortArray, val random: Random = Random.Default) {
         }
 
         if (op mask 0xF000 == 0xD000.toUShort()) {
-            opDXY0(x, y)
+            if (op mask 0xF001 == 0xD000.toUShort()) {
+                opDXY0(x, y)
+            } else {
+                opDXYN(x, y, n)
+            }
         }
 
         if (op mask 0xF0FF == 0xE09E.toUShort()) {
@@ -229,10 +243,6 @@ class Chip8(instructions: UShortArray, val random: Random = Random.Default) {
     }
 
     private fun opEX9E(x: UByte) {
-        TODO("Not yet implemented")
-    }
-
-    private fun opDXY0(x: UByte, y: UByte) {
         TODO("Not yet implemented")
     }
 
@@ -421,6 +431,34 @@ class Chip8(instructions: UShortArray, val random: Random = Random.Default) {
     }
 
     /**
+     * draw 8xN pixel sprite at position vX, vY with data starting at the address in I,
+     */
+    private fun opDXYN(x: UByte, y: UByte, n: UByte) {
+        val xOffset = registers[x]
+        val yOffset = registers[y]
+
+        for (y in 0 until n.toInt()) {
+            val row = memory[addressRegister.toInt()]
+            val yTarget = y + yOffset.toInt()
+            for (x in 0 until 8) {
+                val xTarget = x + xOffset.toInt()
+                if (xTarget in 0..<screenWidth && yTarget in 0 ..< screenHeight) {
+                    val previousPixelState = display[yTarget][xTarget]
+                    val newPixelState = row.bitAt(x)
+                    if (previousPixelState != newPixelState) {
+                        vf = 0x1u
+                    }
+                    display[yTarget][xTarget] = newPixelState
+                }
+            }
+        }
+    }
+
+    private fun opDXY0(x: UByte, y: UByte) {
+
+    }
+
+    /**
      * skip next opcode if vX != vY
      */
     fun op9XY0(x: UByte, y: UByte) {
@@ -453,11 +491,27 @@ class Chip8(instructions: UShortArray, val random: Random = Random.Default) {
         incrementProgrammCounter()
     }
 
-    private fun getNextOp() = memory[programmCounter.toInt()] combine memory[programmCounter.toInt() + 1]
+    private fun getNextOp() =
+        memory[programmCounter.toInt()] combine memory[programmCounter.toInt() + 1]
 
     private fun incrementProgrammCounter() {
         programmCounter++
         programmCounter++
+    }
+
+    fun getScreen(): String {
+        var result = ""
+        display.forEach { row ->
+            row.forEach { pixel ->
+                result += if (pixel) {
+                    "X"
+                } else {
+                    "."
+                }
+            }
+            result += "\n"
+        }
+        return result.trim()
     }
 }
 

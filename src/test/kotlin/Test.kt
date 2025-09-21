@@ -504,4 +504,30 @@ class Test {
 
         assertThat(chip8.registers[0x0]).isEqualTo(0x0A.toUByte())
     }
+
+    @Test
+    fun op_DXYN_draw1Row() {
+        val rom = ushortArrayOf(
+            0xD111u,
+        )
+        val chip8 = Chip8(rom)
+        chip8.registers[0x1] = 0u // x and y offsets are 0
+        chip8.addressRegister = 0xFu
+        chip8.memory[0xF] = 0xFFu
+
+        val expectedScreen = """
+            XXXXXXXX
+            ........
+            ........
+            ........
+            ........
+            ........
+            ........
+            ........
+        """.trimIndent()
+
+        chip8.next()
+
+        assertThat(chip8.getScreen()).isEqualTo(expectedScreen)
+    }
 }
