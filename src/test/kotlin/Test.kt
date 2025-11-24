@@ -1,5 +1,8 @@
 import de.haw.landshut.Chip8
+import de.haw.landshut.leftByte
 import de.haw.landshut.mask
+import de.haw.landshut.pow
+import de.haw.landshut.rightByte
 import org.junit.jupiter.api.Test
 import org.assertj.core.api.Assertions.*;
 import org.mockito.kotlin.any
@@ -557,5 +560,114 @@ class Test {
 
         assertThat(chip8.getScreen()).isEqualTo(expectedScreen)
         assertThat(chip8.vf).isEqualTo(0x1u.toUByte())
+    }
+
+    @Test
+    fun op_DXYN_drawCharacterSprite() {
+        val rom = ushortArrayOf(
+            0xD115u,
+        )
+        val chip8 = Chip8(rom, screenWidth = 5, screenHeight = 7)
+        chip8.registers[0x1] = 0u // x and y offsets are 0
+        chip8.addressRegister = 0xFu
+
+        chip8.memory[0xF + 0] = 0xF0u
+        chip8.memory[0xF + 1] = 0x10u
+        chip8.memory[0xF + 2] = 0x20u
+        chip8.memory[0xF + 3] = 0x40u
+        chip8.memory[0xF + 4] = 0x40u
+
+        val expectedScreen = """
+            XXXX.
+            ...X.
+            ..X..
+            .X...
+            .X...
+            .....
+            .....
+        """.trimIndent()
+
+        chip8.next()
+
+        assertThat(chip8.getScreen()).isEqualTo(expectedScreen)
+        assertThat(chip8.vf).isEqualTo(0x0u.toUByte())
+    }
+
+    @Test
+    fun op_DXY0_draw16x16_vfNotSet() {
+        val rom = ushortArrayOf(
+            0xD110u,
+        )
+        val chip8 = Chip8(rom, screenWidth = 16, screenHeight = 16)
+        chip8.registers[0x1] = 0u // x and y offsets are 0
+        chip8.addressRegister = 0xFu
+
+        for (i in 0..32) {
+            chip8.memory[0xF + i] = 0xFFu
+        }
+
+        val expectedScreen = """
+            XXXXXXXXXXXXXXXX
+            XXXXXXXXXXXXXXXX
+            XXXXXXXXXXXXXXXX
+            XXXXXXXXXXXXXXXX
+            XXXXXXXXXXXXXXXX
+            XXXXXXXXXXXXXXXX
+            XXXXXXXXXXXXXXXX
+            XXXXXXXXXXXXXXXX
+            XXXXXXXXXXXXXXXX
+            XXXXXXXXXXXXXXXX
+            XXXXXXXXXXXXXXXX
+            XXXXXXXXXXXXXXXX
+            XXXXXXXXXXXXXXXX
+            XXXXXXXXXXXXXXXX
+            XXXXXXXXXXXXXXXX
+            XXXXXXXXXXXXXXXX
+        """.trimIndent()
+
+        chip8.next()
+
+        assertThat(chip8.getScreen()).isEqualTo(expectedScreen)
+        assertThat(chip8.vf).isEqualTo(0x0u.toUByte())
+    }
+
+    @Test
+    fun op_DXY0_draw16x16Pyramid_vfNotSet() {
+        val rom = ushortArrayOf(
+            0xD110u,
+        )
+        val chip8 = Chip8(rom, screenWidth = 16, screenHeight = 16)
+        chip8.registers[0x1] = 0u // x and y offsets are 0
+        chip8.addressRegister = 0xFu
+
+        for (i in 0..16) {
+            val number = (2.pow(i) - 1).toUShort()
+            chip8.memory[0xF + (i * 2)] = number.leftByte()
+            chip8.memory[0xF + (i * 2) + 1] = number.rightByte()
+        }
+
+        val expectedScreen = """
+            ................
+            ...............X
+            ..............XX
+            .............XXX
+            ............XXXX
+            ...........XXXXX
+            ..........XXXXXX
+            .........XXXXXXX
+            ........XXXXXXXX
+            .......XXXXXXXXX
+            ......XXXXXXXXXX
+            .....XXXXXXXXXXX
+            ....XXXXXXXXXXXX
+            ...XXXXXXXXXXXXX
+            ..XXXXXXXXXXXXXX
+            .XXXXXXXXXXXXXXX
+        """.trimIndent()
+
+        chip8.next()
+
+        assertThat(chip8.getScreen()).isEqualTo(expectedScreen)
+        assertThat(chip8.vf).isEqualTo(0x0u.toUByte())
     }
 }

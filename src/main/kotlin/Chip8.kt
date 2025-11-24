@@ -438,27 +438,55 @@ class Chip8(
         val yOffset = registers[y]
 
         for (y in 0 until n.toInt()) {
-            val row = memory[addressRegister.toInt()]
+            val row = memory[addressRegister.toInt() + y]
             val yTarget = y + yOffset.toInt()
             for (x in 0 until 8) {
                 val xTarget = x + xOffset.toInt()
-                if (xTarget in 0..<screenWidth && yTarget in 0 ..< screenHeight) {
-                    val previousPixelState = display[yTarget][xTarget]
-                    if (row.bitAt(x)) {
-                        if (previousPixelState) {
-                            display[yTarget][xTarget] = false
-                            vf = 0x1u
-                        } else {
-                            display[yTarget][xTarget] = true
-                        }
-                    }
-                }
+                // we flip the endianness, because the pixels are counted left to right and the bits are counted right to left
+                val indexEndianFlipped = 7 - x
+                drawPixel(xTarget, yTarget, row.bitAt(indexEndianFlipped))
             }
         }
     }
 
+    /**
+     * draw 16x16 pixel sprite at position vX, vY with data starting at the address in I, I is not changed
+     */
     private fun opDXY0(x: UByte, y: UByte) {
+        val xOffset = registers[x]
+        val yOffset = registers[y]
 
+        for (y in 0 until 16) {
+            val rowFront = memory[addressRegister.toInt() + y * 2]
+            val rowBack = memory[addressRegister.toInt() + y * 2 + 1]
+            val yTarget = y + yOffset.toInt()
+            for (x in 0 until 8) {
+                val xTarget = x + xOffset.toInt()
+                // we flip the endianness, because the pixels are counted left to right and the bits are counted right to left
+                val indexEndianFlipped = 7 - x
+                drawPixel(xTarget, yTarget, rowFront.bitAt(indexEndianFlipped))
+            }
+            for (x in 8 until 16) {
+                val xTarget = x + xOffset.toInt()
+                // we flip the endianness, because the pixels are counted left to right and the bits are counted right to left
+                val indexEndianFlipped = 7 - (x - 8)
+                drawPixel(xTarget, yTarget, rowBack.bitAt(indexEndianFlipped))
+            }
+        }
+    }
+
+    private fun drawPixel(x: Int, y: Int, toDraw: Boolean) {
+        if (x in 0..<screenWidth && y in 0..<screenHeight) {
+            val previousPixelState = display[y][x]
+            if (toDraw) {
+                if (previousPixelState) {
+                    display[y][x] = false
+                    vf = 0x1u
+                } else {
+                    display[y][x] = true
+                }
+            }
+        }
     }
 
     /**
