@@ -9,10 +9,16 @@ repositories {
     mavenCentral()
 }
 
+val mockitoAgent = configurations.create("mockitoAgent")
+
 dependencies {
     testImplementation(libs.assertj)
-    testImplementation(libs.mockito)
+    mockitoAgent(libs.mockito) { isTransitive = false }
     testImplementation(libs.mockito.kotlin)
+}
+
+tasks.test {
+    jvmArgs!!.add("-javaagent:${mockitoAgent.asPath}")
 }
 
 testing.suites.named<JvmTestSuite>("test") {
