@@ -239,10 +239,6 @@ class Chip8(
         TODO("Not yet implemented")
     }
 
-    private fun opEXA1(x: UByte) {
-        TODO("Not yet implemented")
-    }
-
     /**
      * Calls machine code routine (RCA 1802 for COSMAC VIP) at address NNN.
      * Not necessary for most ROMs.
@@ -523,7 +519,22 @@ class Chip8(
      * skip next opcode if key in the lower 4 bits of vX is pressed
      */
     private fun opEX9E(x: UByte) {
-        TODO("Not yet implemented")
+        val vX = registers[x]
+        if (keyboard[vX.toInt()]) {
+            incrementProgrammCounter()
+        }
+        incrementProgrammCounter()
+    }
+
+    /**
+     * skip next opcode if key in the lower 4 bits of vX is not pressed
+     */
+    private fun opEXA1(x: UByte) {
+        val vX = registers[x]
+        if (!keyboard[vX.toInt()]) {
+            incrementProgrammCounter()
+        }
+        incrementProgrammCounter()
     }
 
     private fun getNextOp() =
