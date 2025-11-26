@@ -4,10 +4,13 @@ import de.haw.landshut.leftByte
 import de.haw.landshut.leftNibble
 import de.haw.landshut.rightByte
 import de.haw.landshut.rightNibble
+import de.haw.landshut.weaveToUShortArray
 import org.junit.jupiter.api.Test
 
 import org.assertj.core.api.Assertions.*;
+import java.util.Arrays
 
+@OptIn(ExperimentalUnsignedTypes::class)
 class UtilTest {
 
     @Test
@@ -49,5 +52,12 @@ class UtilTest {
     @Test
     fun test_rightNibble() {
         assertThat(0xAF.toUByte().rightNibble).isEqualTo(0xFu.toUByte())
+    }
+
+    @Test
+    fun waveToUShortArray() {
+        val input = byteArrayOf(0xCA.toByte(), 0xFE.toByte(), 0xBA.toByte(), 0xBE.toByte())
+        val expected = ushortArrayOf(0xCAFE.toUShort(), 0xBABE.toUShort())
+        assertThat(input.weaveToUShortArray() contentEquals expected).isTrue
     }
 }

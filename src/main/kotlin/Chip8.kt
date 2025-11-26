@@ -244,21 +244,27 @@ class Chip8(
      * Not necessary for most ROMs.
      */
     fun op0NNN(nnn: UShort) {
-
+        TODO("Not yet implemented")
     }
 
     /**
      * Clears the screen.
      */
     fun op00E0() {
-
+        for (y in 0 until display.size) {
+            val row = display[y]
+            for (x in 0 until row.size) {
+                display[y][x] = false
+            }
+        }
+        incrementProgrammCounter()
     }
 
     /**
      * Returns from a subroutine.
      */
     fun op00EE() {
-
+        TODO("Not yet implemented")
     }
 
     /**
@@ -440,6 +446,7 @@ class Chip8(
                 drawPixel(xTarget, yTarget, row.bitAt(indexEndianFlipped))
             }
         }
+        incrementProgrammCounter()
     }
 
     /**
@@ -466,6 +473,7 @@ class Chip8(
                 drawPixel(xTarget, yTarget, rowBack.bitAt(indexEndianFlipped))
             }
         }
+        incrementProgrammCounter()
     }
 
     private fun drawPixel(x: Int, y: Int, toDraw: Boolean) {

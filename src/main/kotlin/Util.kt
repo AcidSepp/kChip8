@@ -43,3 +43,10 @@ operator fun UByteArray.get(index: UByte) = this[index.toInt()]
 operator fun UByteArray.set(index: UByte, value: UByte) {
     this[index.toInt()] = value
 }
+
+fun ByteArray.weaveToUShortArray(): UShortArray {
+    val ub = this.asUByteArray()
+    return UShortArray(ub.size / 2) { i ->
+        ub[2 * i] combine ub[2 * i + 1]
+    }
+}

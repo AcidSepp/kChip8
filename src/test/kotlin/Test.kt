@@ -738,4 +738,22 @@ class Test {
         assertThat(chip8.registers[0]).isEqualTo(0x00.toUByte())
         assertThat(chip8.registers[1]).isEqualTo(0xFE.toUByte())
     }
+
+    @Test
+    fun op_00E0_clearsDisplay() {
+        val rom = ushortArrayOf(
+            0x00E0u,
+        )
+        val chip8 = Chip8(rom, screenWidth = 2, screenHeight = 2)
+        chip8.display[0][0] = true
+
+        chip8.next()
+
+        val expectedScreen = """
+            ..
+            ..
+        """.trimIndent()
+        assertThat(chip8.getScreen()).isEqualTo(expectedScreen)
+        assertThat(chip8.vf).isEqualTo(0x0u.toUByte())
+    }
 }
