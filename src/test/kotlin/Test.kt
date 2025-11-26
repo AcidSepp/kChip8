@@ -468,10 +468,9 @@ class Test {
             0xAAFEu,
         )
         val chip8 = Chip8(rom)
-        chip8.memory[0xAFE] = 0xFEu
         chip8.next()
 
-        assertThat(chip8.addressRegister).isEqualTo(0x0FEu.toUShort())
+        assertThat(chip8.addressRegister).isEqualTo(0xAFEu.toUShort())
     }
 
     @Test

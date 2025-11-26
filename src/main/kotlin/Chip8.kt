@@ -5,11 +5,6 @@ package de.haw.landshut
 import kotlin.random.Random
 import kotlin.random.nextUBytes
 
-/**
- * see https://en.wikipedia.org/wiki/CHIP-8
- * sse https://chip8.gulrak.net/
- * see http://devernay.free.fr/hacks/chip8/C8TECH10.HTM
- */
 class Chip8(
     instructions: UShortArray,
     val random: Random = Random.Default,
@@ -23,15 +18,16 @@ class Chip8(
 
     init {
         instructions.forEachIndexed { index, it ->
-            memory[index * 2] = it.leftByte
-            memory[index * 2 + 1] = it.rightByte
+            // chip 8 programs start at address 0x200
+            memory[index * 2 + 0x200] = it.leftByte
+            memory[index * 2 + 1 + 0x200] = it.rightByte
         }
         display = Array(screenHeight, {
             BooleanArray(screenWidth, { false })
         })
     }
 
-    private var programmCounter: UShort = 0.toUShort()
+    private var programmCounter: UShort = 0x200.toUShort()
 
     val registers = UByteArray(16)
 
@@ -43,13 +39,11 @@ class Chip8(
 
     var addressRegister: UShort = 0u
 
-    private var stack = ByteArray(2 pow 8)
-    private val stackPointer: Byte = 0
-
     fun next() {
         val op = getNextOp()
 
-        println(op.toHexString())
+        val opAsHex = op.toHexString()
+        println(opAsHex)
 
         val nnn = op mask 0x0FFF
         val nn = op.rightByte
@@ -151,7 +145,7 @@ class Chip8(
         }
 
         if (op mask 0xF000 == 0xD000.toUShort()) {
-            if (op mask 0xF001 == 0xD000.toUShort()) {
+            if (op mask 0xF00F == 0xD000.toUShort()) {
                 opDXY0(x, y)
             } else {
                 opDXYN(x, y, n)
@@ -504,7 +498,7 @@ class Chip8(
      * set I to NNN
      */
     fun opANNN(nnn: UShort) {
-        addressRegister = memory[nnn.toInt()].toUShort()
+        addressRegister = nnn
         incrementProgrammCounter()
     }
 

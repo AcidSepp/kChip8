@@ -16,3 +16,4 @@ I also try to emphasize the indispensability of fine-grained unit testing.
 * https://en.wikipedia.org/wiki/CHIP-8
 * https://chip8.gulrak.net/
 * https://chip-8.github.io/databasemphasizee/
+* http://devernay.free.fr/hacks/chip8/C8TECH10.HTM

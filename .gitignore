@@ -49,3 +49,6 @@ bin/
 /config/texstudio/lastSession.txss2
 /config/texstudio/texstudiode_DE.ign
 /config/texstudio/wordCount.usage
+
+### Chip 8 ROMs ###
+*.ch8

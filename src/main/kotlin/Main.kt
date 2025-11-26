@@ -2,13 +2,15 @@
 
 package de.haw.landshut
 
+import java.io.File
+
 fun main() {
-    val rom = ushortArrayOf(
-        0xC00Fu,
-    )
-    val chip8 = Chip8(rom, screenWidth = 3, screenHeight = 3)
+    val rom = File("src/main/resources/Chip8 Picture.ch8").readBytes()
 
-    chip8.display[2][0] = true
+    val chip8 = Chip8(rom.weaveToUShortArray(), screenWidth = 64, screenHeight = 32)
 
-    println(chip8.getScreen())
+    repeat(100) {
+        chip8.next()
+        println(chip8.getScreen())
+    }
 }
