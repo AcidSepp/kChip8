@@ -642,8 +642,8 @@ class Test {
 
         for (i in 0..16) {
             val number = (2.pow(i) - 1).toUShort()
-            chip8.memory[0xF + (i * 2)] = number.leftByte()
-            chip8.memory[0xF + (i * 2) + 1] = number.rightByte()
+            chip8.memory[0xF + (i * 2)] = number.leftByte
+            chip8.memory[0xF + (i * 2) + 1] = number.rightByte
         }
 
         val expectedScreen = """

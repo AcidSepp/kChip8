@@ -2,13 +2,13 @@
 
 package de.haw.landshut
 
-import kotlin.math.pow
 import kotlin.random.Random
 import kotlin.random.nextUBytes
 
 /**
  * see https://en.wikipedia.org/wiki/CHIP-8
  * sse https://chip8.gulrak.net/
+ * see http://devernay.free.fr/hacks/chip8/C8TECH10.HTM
  */
 class Chip8(
     instructions: UShortArray,
@@ -19,11 +19,12 @@ class Chip8(
 
     val display: Array<BooleanArray>
     val memory = UByteArray(2 pow 16)
+    val keyboard = BooleanArray(2 pow 4)
 
     init {
         instructions.forEachIndexed { index, it ->
-            memory[index * 2] = it.leftByte()
-            memory[index * 2 + 1] = it.rightByte()
+            memory[index * 2] = it.leftByte
+            memory[index * 2 + 1] = it.rightByte
         }
         display = Array(screenHeight, {
             BooleanArray(screenWidth, { false })
@@ -51,9 +52,9 @@ class Chip8(
         println(op.toHexString())
 
         val nnn = op mask 0x0FFF
-        val nn = op.rightByte()
+        val nn = op.rightByte
         val n = (op mask 0x000F).toUByte()
-        val x = (op mask 0x0F00).leftByte()
+        val x = (op mask 0x0F00).leftByte
         val y = ((op mask 0x00F0) shr 4).toUByte()
 
         if (op mask 0xFF00 == 0x0000.toUShort()) {
@@ -239,10 +240,6 @@ class Chip8(
     }
 
     private fun opEXA1(x: UByte) {
-        TODO("Not yet implemented")
-    }
-
-    private fun opEX9E(x: UByte) {
         TODO("Not yet implemented")
     }
 
@@ -522,6 +519,13 @@ class Chip8(
         incrementProgrammCounter()
     }
 
+    /**
+     * skip next opcode if key in the lower 4 bits of vX is pressed
+     */
+    private fun opEX9E(x: UByte) {
+        TODO("Not yet implemented")
+    }
+
     private fun getNextOp() =
         memory[programmCounter.toInt()] combine memory[programmCounter.toInt() + 1]
 
@@ -544,28 +548,4 @@ class Chip8(
         }
         return result.trim()
     }
-}
-
-infix fun Int.pow(exponent: Int) = this.toDouble().pow(exponent).toInt()
-
-infix fun UShort.mask(mask: Int) = this.and(mask.toUShort())
-
-infix fun UByte.mask(mask: Int) = this.and(mask.toUByte())
-
-fun UShort.leftByte() = (this.toUInt() shr 8).toUByte()
-
-fun UShort.rightByte() = this.toUByte()
-
-infix fun UShort.shr(shift: Int) = (this.toUInt() shr shift).toUShort()
-
-infix fun UShort.shl(shift: Int) = (this.toUInt() shl shift).toUShort()
-
-infix fun UByte.shr(shift: Int) = (this.toUInt() shr shift).toUByte()
-
-infix fun UByte.shl(shift: Int) = (this.toUInt() shl shift).toUByte()
-
-operator fun UByteArray.get(index: UByte) = this[index.toInt()]
-
-operator fun UByteArray.set(index: UByte, value: UByte) {
-    this[index.toInt()] = value
 }
